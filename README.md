@@ -178,23 +178,20 @@ import gzip
 
 chromosome_size = 83257441 #hg38 chr17
 resolution = 40000 # 40kb
-bin_length = (chromosome_size/resolution) + 1
+bin_length = int((chromosome_size/resolution) + 1)
 
 contact_map = np.zeros((bin_length, bin_length))
 
-f = gzip.open('GM19240.chr17.covnorm.gz') # coverage normalization result file
-f.readline() #header
-for line in f:
-    line = line.rstrip()
-    linedata = line.split('\t')
-    bin1 = int(linedata[0].split('.')[1])/resolution
-    bin2 = int(linedata[1].split('.')[1])/resolution
-    freq = float(linedata[8])
+with gzip.open('GM19240.chr17.covnorm.gz','rt',encoding='utf-8') as f:
+    f.readline()
+    for line in f.readlines():
+        linedata = line.strip().split('\t')
+        bin1 = int(linedata[0].split('.')[1])/resolution
+        bin2 = int(linedata[1].split('.')[1])/resolution
+        freq = float(linedata[8])
 
-    contact_map[bin1][bin2] += freq
-    contact_map[bin2][bin1] += freq
-#
-f.close()
+        contact_map[int(bin1),int(bin2)] += freq
+        contact_map[int(bin2),int(bin1)] += freq
 
 fig = plt.figure(1)
 ax = fig.add_subplot(111)
