@@ -50,4 +50,5 @@ vignettes/*.pdf
 # End of https://www.toptal.com/developers/gitignore/api/r
 *.gz
 *.pdf
-test*
+test.*
+*pdb
