@@ -25,7 +25,6 @@ import numpy as np
 from scipy import sparse
 from scipy import stats
 import statsmodels.api as sm
-import patsy
 import warnings
 import time
 

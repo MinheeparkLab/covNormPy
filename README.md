@@ -55,6 +55,21 @@ git clone https://github.com/kaistcbfg/covNormRpkg.git
 R CMD build covNormRpkg
 R CMD INSTALL covNormRpkg_1.1.0.tar.gz
 ```
+For python porting version, its dependencies are:
+
+Python 3
+pandas
+numpy
+scipy
+statsmodels
+distfit
+gzip
+
+To install those libraries, use Conda or pip:
+```python
+conda install pandas
+pip -m install pandas
+```
 
 ## Sample Data and Input Format
 
@@ -93,7 +108,7 @@ Use midpoint between start and end for pcHi-C.
 
 ## Example Codes
 
-Please refer to the 'Supplmentary Information' of our published paper or the man page of each function (e.g. ```?covNormRpkg::normCoverage```) for analysis tips and details about input parameters.
+Please refer to the 'Supplmentary Information' of our published paper or the man page of each function (e.g. ```?covNormRpkg::normCoverage``` ) for analysis tips and details about input parameters.
 
 We  provide example codes for Hi-C and pcHi-C analysis demonstration. 
 
@@ -142,6 +157,90 @@ cov_result <- covNormRpkg::normCoverage(raw_data_filter, do_shuffle=FALSE, cov1_
 #in pcHi-C PO-interaction normalization, lower coverage threshold for 'other' interaction
 ```
 
+For covNormPy,
+```python
+import covNormPy
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+df = covNormPy.loadGz('GM19240.chr17.cis.feature.gz')
+df1 = covNormPy.filterInputDF(df)
+
+# dataframe to matrix
+X = covNormPy.toMatrix(df1)
+
+# coverage normalization (dataframe)
+params, df1norm = covNormPy.normalization.covNormDF(df1,doShuffle=False)
+
+covNormPy.qualitycontrol.checkFreqCovPCC(df1norm)
+
+# coverage normalization (matrix)
+Xnorm = covNormPy.normalization.covNorm(X)
+
+normX = covNormPy.toMatrix(df1norm,freqCol='capture_res')
+
+
+def LOG(X):
+    logX = np.log(X)
+    logX[np.isinf(logX)] = 0
+    return logX
+
+print(X.sum(),Xnorm.sum())
+totalCounts = X.sum()
+scale = lambda x: x*totalCounts/x.sum()
+
+vmax=10
+fig,ax = plt.subplots(2,2,figsize=(20,20))
+p0 = ax[0,0].imshow(X,cmap='coolwarm',vmin=0,vmax=vmax)
+ax[0,0].set_title('Raw',fontsize=25)
+ax[0,1].axis('off')
+p1 = ax[1,0].imshow(Xnorm,cmap='coolwarm',vmin=0,vmax=vmax)
+ax[1,0].set_title('Normalized from Matrix',fontsize=25)
+p2 = ax[1,1].imshow(scale(normX),cmap='coolwarm',vmin=0,vmax=vmax)
+ax[1,1].set_title('Normalized from DataFrame, Python',fontsize=25)
+fig.colorbar(p0,ax=ax[0,0],fraction=0.05)
+fig.colorbar(p1,ax=ax[1,0],fraction=0.05)
+fig.colorbar(p2,ax=ax[1,1],fraction=0.05)
+
+# distance normalization (dataframe)
+params, df1distnorm = covNormPy.normalization.distNormDF(df1norm)
+
+Xdistnorm = covNormPy.normalization.distNorm(Xnorm)
+
+# to test distance normalization qaulity
+#test = covNormPy.qualitycontrol.contactPvalDF(df1distnorm,scope='full')
+
+distnormX = covNormPy.toMatrix(df1distnorm,freqCol='dist_res')
+
+totalCounts = X.sum()
+scale = lambda x: x*totalCounts/x.sum()
+from cooltools.lib.numutils import observed_over_expected
+
+observedOverExpected = lambda x: observed_over_expected(x)
+
+vmax=10
+fig,ax = plt.subplots(3,2,figsize=(20,30))
+p0 = ax[0,0].imshow(X,cmap='coolwarm',vmin=0,vmax=vmax)
+ax[0,0].set_title('Raw',fontsize=25)
+p3 = ax[0,1].imshow(scale(normX),cmap='coolwarm',vmin=0,vmax=vmax)
+ax[0,1].set_title('covNorm',fontsize=25)
+p1 = ax[1,0].imshow(scale(distnormX),cmap='coolwarm',vmin=0,vmax=vmax)
+ax[1,0].set_title('distNorm',fontsize=25)
+p2 = ax[1,1].imshow(Xdistnorm,cmap='coolwarm',vmin=0,vmax=vmax)
+ax[1,1].set_title('distNorm from Matrix',fontsize=25)
+p4 = ax[2,0].imshow(scale(observedOverExpected(X)[0]),cmap='coolwarm',vmin=0,vmax=vmax)
+ax[2,0].set_title('observedOverExpected',fontsize=25)
+ax[2,1].axis('off')
+
+fig.colorbar(p0,ax=ax[0,0],fraction=0.05)
+fig.colorbar(p1,ax=ax[1,0],fraction=0.05)
+fig.colorbar(p2,ax=ax[1,1],fraction=0.05)
+fig.colorbar(p3,ax=ax[0,1],fraction=0.05)
+fig.colorbar(p4,ax=ax[2,0],fraction=0.05)
+fig.tight_layout()
+```
+
 ## Output 
 
 For detailed interpretation of the result, check 'Supplmentary Information' of our published paper.
@@ -170,6 +269,7 @@ Use **'capture_res'** value to plot coverge normalized Hi-C contact map.
 Following example code can be used:
 
 ```python
+## For covNormPy user, you can just use covNormPy.toMatrix(dataFrame)
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
