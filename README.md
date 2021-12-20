@@ -57,13 +57,15 @@ R CMD INSTALL covNormRpkg_1.1.0.tar.gz
 ```
 For python porting version, its dependencies are:
 
-Python 3
+```python
+python 3
 pandas
 numpy
 scipy
 statsmodels
 distfit
 gzip
+```
 
 To install those libraries, use Conda or pip:
 ```python
